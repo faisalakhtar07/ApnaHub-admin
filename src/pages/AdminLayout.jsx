@@ -88,7 +88,33 @@ export default function AdminLayout() {
     </button>
   </div>
 </aside>
-      <main className="flex-1 min-w-0">
+     {/* Mobile overlay */}
+{menuOpen && (
+  <button
+    onClick={() => setMenuOpen(false)}
+    className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+    aria-label="Close menu"
+  />
+)}
+
+<main className="flex-1 min-w-0">
+  {/* Mobile Header */}
+  <div className="lg:hidden h-16 bg-[#0B1120] flex items-center px-4 border-b border-white/10">
+    <button
+      onClick={() => setMenuOpen(true)}
+      className="w-10 h-10 rounded-xl flex items-center justify-center text-white hover:bg-white/10"
+      aria-label="Open menu"
+    >
+      <Menu size={24} />
+    </button>
+
+    <div className="ml-3 flex items-center gap-2">
+      <span className="font-display font-bold text-white text-sm">
+        APNAHUB Admin
+      </span>
+    </div>
+  </div>
+
         <Outlet />
       </main>
     </div>

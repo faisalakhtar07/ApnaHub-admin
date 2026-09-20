@@ -1,6 +1,18 @@
 import React from "react";
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Building2, Briefcase, ShoppingBag, LogOut, ShieldCheck, CreditCard, Megaphone, Settings, Menu, X,} from "lucide-react";
+import {
+  LayoutDashboard,
+  Building2,
+  Briefcase,
+  ShoppingBag,
+  LogOut,
+  ShieldCheck,
+  CreditCard,
+  Megaphone,
+  Settings,
+  Menu,
+  X,
+} from "lucide-react";
 import { adminAuthApi } from "../lib/api";
 
 const NAV = [
@@ -28,92 +40,99 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-screen flex bg-slate-50 dark:bg-[#0B1120]">
+
+      {/* Mobile overlay */}
+      {menuOpen && (
+        <button
+          type="button"
+          onClick={() => setMenuOpen(false)}
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          aria-label="Close menu"
+        />
+      )}
+
+      {/* Sidebar */}
       <aside
-  className={
-    fixed inset-y-0 left-0 z-50
-    w-64 bg-[#0B1120] text-slate-300 flex flex-col
-    transform transition-transform duration-300 ease-in-out
-    lg:static lg:translate-x-0
-    ${menuOpen ? "translate-x-0" : "-translate-x-full"}
-  }
->
-  <div className="h-16 flex items-center justify-between gap-2 px-5 border-b border-white/10">
-    <div className="flex items-center gap-2">
-      <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-400 flex items-center justify-center">
-        <ShieldCheck size={15} className="text-white" />
-      </span>
-
-      <span className="font-display font-bold text-white text-sm">
-        APNAHUB Admin
-      </span>
-    </div>
-
-    {/* Mobile Close Button */}
-    <button
-      onClick={() => setMenuOpen(false)}
-      className="lg:hidden text-slate-400 hover:text-white"
-      aria-label="Close menu"
-    >
-      <X size={22} />
-    </button>
-  </div>
-
-  <nav className="flex-1 px-3 py-5 space-y-1">
-    {NAV.map((item) => (
-      <NavLink
-        key={item.to}
-        to={item.to}
-        onClick={() => setMenuOpen(false)}
-        className={({ isActive }) =>
-          `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-            isActive
-              ? "bg-indigo-500/15 text-indigo-400"
-              : "text-slate-400 hover:bg-white/5 hover:text-white"
-          }
+        className={
+          "fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-[#0B1120] text-slate-300 flex flex-col transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 " +
+          (menuOpen ? "translate-x-0" : "-translate-x-full")
         }
       >
-        <item.icon size={16} />
-        {item.label}
-      </NavLink>
-    ))}
-  </nav>
+        {/* Sidebar Header */}
+        <div className="h-16 flex items-center justify-between gap-2 px-5 border-b border-white/10">
+          <div className="flex items-center gap-2">
+            <span className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-400 flex items-center justify-center">
+              <ShieldCheck size={15} className="text-white" />
+            </span>
 
-  <div className="p-3 border-t border-white/10">
-    <button
-      onClick={logout}
-      className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white w-full"
-    >
-      <LogOut size={16} />
-      Log out
-    </button>
-  </div>
-</aside>
-     {/* Mobile overlay */}
-{menuOpen && (
-  <button
-    onClick={() => setMenuOpen(false)}
-    className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-    aria-label="Close menu"
-  />
-)}
+            <span className="font-display font-bold text-white text-sm">
+              APNAHUB Admin
+            </span>
+          </div>
 
-<main className="flex-1 min-w-0">
-  {/* Mobile Header */}
-  <div className="lg:hidden h-16 bg-[#0B1120] flex items-center px-4 border-b border-white/10">
-    <button
-      onClick={() => setMenuOpen(true)}
-      className="w-10 h-10 rounded-xl flex items-center justify-center text-white hover:bg-white/10"
-      aria-label="Open menu"
-    >
-      <Menu size={24} />
-    </button>
+          {/* Mobile close */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen(false)}
+            className="lg:hidden text-slate-400 hover:text-white"
+            aria-label="Close menu"
+          >
+            <X size={22} />
+          </button>
+        </div>
 
-    <div className="ml-3 flex items-center gap-2">
-      <span className="font-display font-bold text-white text-sm">
-        APNAHUB Admin
-      </span>
-    </div>
-  </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-3 py-5 space-y-1">
+          {NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              onClick={() => setMenuOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-indigo-500/15 text-indigo-400"
+                    : "text-slate-400 hover:bg-white/5 hover:text-white"
+                }`
+              }
+            >
+              <item.icon size={16} />
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Logout */}
+        <div className="p-3 border-t border-white/10">
+          <button
+            type="button"
+            onClick={logout}
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-white/5 hover:text-white w-full"
+          >
+            <LogOut size={16} />
+            Log out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <main className="flex-1 min-w-0">
+
+        {/* Mobile Header */}
+        <div className="lg:hidden h-16 bg-[#0B1120] flex items-center px-4 border-b border-white/10">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            className="w-10 h-10 rounded-xl flex items-center justify-center text-white hover:bg-white/10"
+            aria-label="Open menu"
+          >
+            <Menu size={24} />
+          </button>
+
+          <span className="ml-3 font-display font-bold text-white text-sm">
+            APNAHUB Admin
+          </span>
+        </div>
 
         <Outlet />
       </main>

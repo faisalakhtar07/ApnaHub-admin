@@ -49,6 +49,7 @@ export const adsApi = {
   all: () => request("/ads/admin/all"),
   setStatus: (id, status) => request(`/ads/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
   toggleFeature: (id) => request(`/ads/${id}/feature`, { method: "PATCH" }),
+  setMedia: (id, payload) => request(`/ads/${id}/media`, { method: "PATCH", body: JSON.stringify(payload) }),
 };
 
 export const adminAuthApi = {

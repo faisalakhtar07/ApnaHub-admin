@@ -1,18 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { Star, Check, X as XIcon, Ban, Eye } from "lucide-react";
+import { Star, Check, X as XIcon, Ban, Eye, ImagePlus, Upload } from "lucide-react";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Btn from "../components/ui/Btn";
+import Modal from "../components/ui/Modal";
 import { adsApi } from "../lib/api";
 
 const STATUS_TONE = { pending: "soon", approved: "open", active: "open", rejected: "closed", suspended: "closed", expired: "neutral", draft: "neutral" };
-const FILTERS = ["all", "pending", "approved", "rejected", "suspended", "expired"];
+const FILTERS = ["all", "pending", "needs media", "approved", "rejected", "suspended", "expired"];
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function AdminAdsModeration() {
   const [ads, setAds] = useState([]);
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [mediaModalAd, setMediaModalAd] = useState(null);
+  const [mediaImages, setMediaImages] = useState([]);
+  const [savingMedia, setSavingMedia] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -39,7 +52,32 @@ export default function AdminAdsModeration() {
     }
   };
 
-  const visible = filter === "all" ? ads : ads.filter((a) => a.status === filter);
+  const openMediaModal = (ad) => { setMediaModalAd(ad); setMediaImages(ad.images || []); };
+  const closeMediaModal = () => { setMediaModalAd(null); setMediaImages([]); };
+
+  const addMediaFiles = async (fileList) => {
+    const files = Array.from(fileList).slice(0, 6 - mediaImages.length);
+    const dataUrls = await Promise.all(files.map(fileToDataUrl));
+    setMediaImages((prev) => [...prev, ...dataUrls].slice(0, 6));
+  };
+
+  const saveMedia = async () => {
+    setSavingMedia(true);
+    try {
+      await adsApi.setMedia(mediaModalAd._id, { images: mediaImages });
+      closeMediaModal();
+      load();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingMedia(false);
+    }
+  };
+
+  const visible =
+    filter === "all" ? ads :
+    filter === "needs media" ? ads.filter((a) => a.needsMediaDesign) :
+    ads.filter((a) => a.status === filter);
 
   return (
     <div className="p-8 max-w-6xl">
@@ -77,12 +115,16 @@ export default function AdminAdsModeration() {
                 <div className="flex items-center gap-2">
                   <p className="font-medium text-slate-800 dark:text-white truncate">{ad.title}</p>
                   {ad.featured && <Star size={13} className="text-amber-500 fill-current shrink-0" />}
+                  {ad.needsMediaDesign && <Badge tone="soon">Needs Media</Badge>}
                 </div>
                 <p className="text-xs text-slate-400">{ad.category} · {ad.owner?.name || "Unknown"} ({ad.owner?.phone}) · {new Date(ad.createdAt).toLocaleDateString()}</p>
               </div>
               <Badge tone={STATUS_TONE[ad.status] || "neutral"}>{ad.status}</Badge>
               <div className="flex gap-1.5 shrink-0">
-                {ad.status === "pending" && (
+                {ad.needsMediaDesign && (
+                  <Btn variant="marigold" size="sm" icon={ImagePlus} onClick={() => openMediaModal(ad)}>Add media</Btn>
+                )}
+                {ad.status === "pending" && !ad.needsMediaDesign && (
                   <>
                     <Btn variant="primary" size="sm" icon={Check} onClick={() => setStatus(ad._id, "approved")}>Approve</Btn>
                     <Btn variant="danger" size="sm" icon={XIcon} onClick={() => setStatus(ad._id, "rejected")}>Reject</Btn>
@@ -102,6 +144,30 @@ export default function AdminAdsModeration() {
           ))}
         </div>
       )}
+
+      <Modal open={Boolean(mediaModalAd)} onClose={closeMediaModal}>
+        <Card className="p-6" hover={false}>
+          <h2 className="font-display font-semibold text-lg text-slate-900 dark:text-white mb-1">Design media for "{mediaModalAd?.title}"</h2>
+          <p className="text-xs text-slate-400 mb-4">Upload the banner/photo you've created for this advertiser. This clears their "needs media" flag so you can approve the ad next.</p>
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {mediaImages.map((src, i) => (
+              <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
+                <img src={src} className="w-full h-full object-cover" alt={`Design ${i + 1}`} />
+              </div>
+            ))}
+            {mediaImages.length < 6 && (
+              <label className="aspect-square rounded-xl border-2 border-dashed border-slate-200 dark:border-white/15 flex flex-col items-center justify-center gap-1 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 cursor-pointer">
+                <Upload size={18} />
+                <span className="text-[11px] font-medium">Upload</span>
+                <input type="file" accept="image/*" multiple hidden onChange={(e) => e.target.files && addMediaFiles(e.target.files)} />
+              </label>
+            )}
+          </div>
+          <Btn variant="primary" className="w-full" onClick={saveMedia} disabled={savingMedia || mediaImages.length === 0}>
+            {savingMedia ? "Saving…" : "Save media & clear flag"}
+          </Btn>
+        </Card>
+      </Modal>
     </div>
   );
 }

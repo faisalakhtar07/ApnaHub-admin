@@ -52,6 +52,30 @@ export const adsApi = {
   setMedia: (id, payload) => request(`/ads/${id}/media`, { method: "PATCH", body: JSON.stringify(payload) }),
 };
 
+export const notificationsApi = {
+  mine: () => request("/notifications/admin"),
+  markRead: (id) => request(`/notifications/admin/${id}/read`, { method: "PATCH" }),
+  markAllRead: () => request("/notifications/admin/read-all", { method: "PATCH" }),
+};
+
+export const uploadApi = {
+  file: async (blob, filename = "upload.jpg") => {
+    const formData = new FormData();
+    formData.append("file", blob, filename);
+    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    const res = await fetch(`${API_URL}/upload/admin`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `Upload failed (${res.status})`);
+    }
+    return res.json();
+  },
+};
+
 export const adminAuthApi = {
   login: async (email, password) => {
     const data = await request("/admin/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });

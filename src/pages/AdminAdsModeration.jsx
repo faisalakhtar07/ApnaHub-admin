@@ -4,19 +4,11 @@ import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 import Btn from "../components/ui/Btn";
 import Modal from "../components/ui/Modal";
-import { adsApi } from "../lib/api";
+import { adsApi, uploadApi } from "../lib/api";
+import { compressImageFile } from "../lib/imageCompress";
 
 const STATUS_TONE = { pending: "soon", approved: "open", active: "open", rejected: "closed", suspended: "closed", expired: "neutral", draft: "neutral" };
 const FILTERS = ["all", "pending", "needs media", "approved", "rejected", "suspended", "expired"];
-
-function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
 
 export default function AdminAdsModeration() {
   const [ads, setAds] = useState([]);
@@ -25,6 +17,7 @@ export default function AdminAdsModeration() {
   const [error, setError] = useState("");
   const [mediaModalAd, setMediaModalAd] = useState(null);
   const [mediaImages, setMediaImages] = useState([]);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [savingMedia, setSavingMedia] = useState(false);
 
   const load = () => {
@@ -57,8 +50,22 @@ export default function AdminAdsModeration() {
 
   const addMediaFiles = async (fileList) => {
     const files = Array.from(fileList).slice(0, 6 - mediaImages.length);
-    const dataUrls = await Promise.all(files.map(fileToDataUrl));
-    setMediaImages((prev) => [...prev, ...dataUrls].slice(0, 6));
+    if (!files.length) return;
+    setUploadingMedia(true);
+    setError("");
+    try {
+      const urls = [];
+      for (const file of files) {
+        const blob = await compressImageFile(file);
+        const { url } = await uploadApi.file(blob, file.name);
+        urls.push(url);
+      }
+      setMediaImages((prev) => [...prev, ...urls].slice(0, 6));
+    } catch (err) {
+      setError(err.message || "Upload failed. Check your connection and try again.");
+    } finally {
+      setUploadingMedia(false);
+    }
   };
 
   const saveMedia = async () => {
@@ -156,14 +163,14 @@ export default function AdminAdsModeration() {
               </div>
             ))}
             {mediaImages.length < 6 && (
-              <label className="aspect-square rounded-xl border-2 border-dashed border-slate-200 dark:border-white/15 flex flex-col items-center justify-center gap-1 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 cursor-pointer">
+              <label className={`aspect-square rounded-xl border-2 border-dashed border-slate-200 dark:border-white/15 flex flex-col items-center justify-center gap-1 text-slate-400 hover:border-indigo-400 hover:text-indigo-500 cursor-pointer ${uploadingMedia ? "opacity-50 pointer-events-none" : ""}`}>
                 <Upload size={18} />
-                <span className="text-[11px] font-medium">Upload</span>
-                <input type="file" accept="image/*" multiple hidden onChange={(e) => e.target.files && addMediaFiles(e.target.files)} />
+                <span className="text-[11px] font-medium">{uploadingMedia ? "Uploading…" : "Upload"}</span>
+                <input type="file" accept="image/*" multiple hidden disabled={uploadingMedia} onChange={(e) => e.target.files && addMediaFiles(e.target.files)} />
               </label>
             )}
           </div>
-          <Btn variant="primary" className="w-full" onClick={saveMedia} disabled={savingMedia || mediaImages.length === 0}>
+          <Btn variant="primary" className="w-full" onClick={saveMedia} disabled={savingMedia || uploadingMedia || mediaImages.length === 0}>
             {savingMedia ? "Saving…" : "Save media & clear flag"}
           </Btn>
         </Card>

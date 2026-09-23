@@ -3,8 +3,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLogin from "./pages/AdminLogin";
 import AdminLayout from "./pages/AdminLayout";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminBusinesses from "./pages/AdminBusinesses";
-import AdminJobs from "./pages/AdminJobs";
+import AdminBusinessModeration from "./pages/AdminBusinessModeration";
+import AdminJobModeration from "./pages/AdminJobModeration";
 import AdminListings from "./pages/AdminListings";
 import AdminSubscriptionPlans from "./pages/AdminSubscriptionPlans";
 import AdminAdsModeration from "./pages/AdminAdsModeration";
@@ -17,8 +17,8 @@ export default function App() {
       <Route path="/" element={<AdminLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="businesses" element={<AdminBusinesses />} />
-        <Route path="jobs" element={<AdminJobs />} />
+        <Route path="businesses" element={<AdminBusinessModeration />} />
+        <Route path="jobs" element={<AdminJobModeration />} />
         <Route path="listings" element={<AdminListings />} />
         <Route path="subscription-plans" element={<AdminSubscriptionPlans />} />
         <Route path="ads" element={<AdminAdsModeration />} />

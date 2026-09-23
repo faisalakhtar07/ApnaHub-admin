@@ -29,8 +29,20 @@ function resource(name) {
   };
 }
 
-export const businessesApi = resource("businesses");
-export const jobsApi = resource("jobs");
+export const businessesAdminApi = {
+  all: () => request("/businesses/admin/all"),
+  setStatus: (id, status, rejectionReason = "") => request(`/businesses/${id}/status`, { method: "PATCH", body: JSON.stringify({ status, rejectionReason }) }),
+  update: (id, payload) => request(`/businesses/admin/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  remove: (id) => request(`/businesses/admin/${id}`, { method: "DELETE" }),
+};
+
+export const jobsAdminApi = {
+  all: () => request("/jobs/admin/all"),
+  setStatus: (id, status, rejectionReason = "") => request(`/jobs/${id}/status`, { method: "PATCH", body: JSON.stringify({ status, rejectionReason }) }),
+  update: (id, payload) => request(`/jobs/admin/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  remove: (id) => request(`/jobs/admin/${id}`, { method: "DELETE" }),
+};
+
 export const listingsApi = resource("listings");
 
 export const subscriptionPlansApi = {
